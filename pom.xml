@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>auth-client</artifactId>
-    <version>3.0.0</version>
+    <version>3.1.0</version>
     <name>The Samply.Auth Client</name>
     <description>A simple library used for the Samply.Auth identity provider</description>
 

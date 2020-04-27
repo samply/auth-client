@@ -36,6 +36,7 @@ import de.samply.auth.rest.OAuth2Discovery;
 import de.samply.auth.rest.UserListDto;
 import de.samply.auth.utils.OAuth2ClientConfig;
 import de.samply.common.config.OAuth2Client;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
@@ -46,6 +47,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.xml.bind.DatatypeConverter;
 import net.minidev.json.JSONObject;
 import org.keycloak.representations.idm.UserRepresentation;
 
@@ -242,6 +244,7 @@ public class KeycloakAuthClient extends AuthClient {
    */
   private boolean checkTokenValidity(AbstractJwt token) {
     Invocation.Builder builder = getTokenIntrospectionBuilder();
+    builder.header("Authorization", getBasicAuthentication());
     Form form = new Form();
     form.param("token", token.getSerialized());
     JSONObject introspectionResult = builder.post(Entity.form(form), JSONObject.class);
@@ -263,7 +266,6 @@ public class KeycloakAuthClient extends AuthClient {
 
   protected Invocation.Builder getTokenIntrospectionBuilder() {
     return client
-        .register(new BasicAuthenticator(config.getClientId(), config.getClientSecret()))
         .target(baseUrl)
         .path(OAuth2ClientConfig.getEndpointPrefix(config.getRealm()))
         .path("token")
@@ -308,5 +310,17 @@ public class KeycloakAuthClient extends AuthClient {
   /** Returns the Builder to get all clients. TODO keycloak is not done */
   protected Invocation.Builder getClientBuilder() {
     return getUriPrefix().path("token").request(MediaType.APPLICATION_JSON);
+  }
+
+  /**
+   * Generate BASIC auth header from client id / client secret.
+   */
+  private String getBasicAuthentication() {
+    String token = config.getClientId() + ":" + config.getClientSecret();
+    try {
+      return "BASIC " + DatatypeConverter.printBase64Binary(token.getBytes("UTF-8"));
+    } catch (UnsupportedEncodingException ex) {
+      throw new IllegalStateException("Cannot encode with UTF-8", ex);
+    }
   }
 }

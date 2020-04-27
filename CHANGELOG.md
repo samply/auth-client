@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2020-04-27
+### Changed
+- set auth header for token introspection calls instead of registering a client request filter
+
 ## [3.0.0] - 2020-04-24
 ### Added
 - use token introspection endpoint from keycloak to verify tokens
@@ -13,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - updated parent.pom
 ### Removed
 - internal validation from keycloak tokens
+
+## [2.0.1] - 2019-01-10
+### Added
+- catch exceptions when trying to get an access token
 
 ## [2.0.0] - 2019-01-10
 ### Added
