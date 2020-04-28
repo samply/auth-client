@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>auth-client</artifactId>
-    <version>3.1.0</version>
+    <version>3.1.1</version>
     <name>The Samply.Auth Client</name>
     <description>A simple library used for the Samply.Auth identity provider</description>
 
@@ -38,7 +38,7 @@
         <dependency>
             <groupId>de.mig.samply</groupId>
             <artifactId>auth-dto</artifactId>
-            <version>3.0.0</version>
+            <version>3.0.1</version>
         </dependency>
         <dependency>
             <groupId>de.mig.samply</groupId>
@@ -69,6 +69,11 @@
             <groupId>net.minidev</groupId>
             <artifactId>json-smart</artifactId>
             <version>1.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <version>8.15</version>
         </dependency>
     </dependencies>
 

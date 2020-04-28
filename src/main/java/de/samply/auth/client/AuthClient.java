@@ -40,6 +40,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
@@ -244,6 +245,23 @@ public abstract class AuthClient {
   protected abstract Invocation.Builder getAccessTokenBuilder();
 
   public abstract OAuth2Discovery getDiscovery();
+
+  /**
+   *  Returns the current OAuth2 configuration.
+   * @param client the configured jersey client
+   * @param config the oauth config
+   * @return the discovery object
+   */
+  public static OAuth2Discovery getDiscovery(Client client, OAuth2Client config) {
+    return client
+        .target(config.getHost())
+        .path("realms")
+        .path(config.getRealm())
+        .path(".well-known")
+        .path("openid-configuration")
+        .request(MediaType.APPLICATION_JSON)
+        .get(OAuth2Discovery.class);
+  }
 
   public String getState() {
     return state;

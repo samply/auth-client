@@ -22,6 +22,7 @@
 
 package de.samply.auth.client;
 
+import com.nimbusds.jose.JWSAlgorithm;
 import de.samply.auth.client.jwt.AbstractJwt;
 import de.samply.auth.client.jwt.JwtAccessToken;
 import de.samply.auth.client.jwt.JwtException;
@@ -218,16 +219,21 @@ public class KeycloakAuthClient extends AuthClient {
       form.param("scope", "openid");
     }
     try {
+      List<String> supportedSigningAlgs = getDiscovery().getSupportedSigningAlgs();
+      boolean externalValidation = supportedSigningAlgs.contains(JWSAlgorithm.HS256.getName());
       AccessTokenDto tokenDto = builder.post(Entity.form(form), AccessTokenDto.class);
-      accessToken = new JwtAccessToken(publicKey, tokenDto.getAccessToken(), true);
-      idToken = new JwtIdToken(config.getClientId(), publicKey, tokenDto.getIdToken(), true);
-      refreshToken = new JwtRefreshToken(publicKey, tokenDto.getRefreshToken(), true);
+      accessToken = new JwtAccessToken(publicKey, tokenDto.getAccessToken(), externalValidation);
+      idToken = new JwtIdToken(config.getClientId(), publicKey, tokenDto.getIdToken(),
+          externalValidation);
+      refreshToken = new JwtRefreshToken(publicKey, tokenDto.getRefreshToken(), externalValidation);
 
-      if (!checkTokenValidity(accessToken) || !checkTokenValidity(idToken) || !checkTokenValidity(
-          refreshToken)) {
+      if (!checkTokenValidity(accessToken, externalValidation) || !checkTokenValidity(idToken,
+          externalValidation) || !checkTokenValidity(
+          refreshToken, externalValidation)) {
         logger.debug("The token we got was not valid. Throw an exception.");
         throw new InvalidTokenException();
       }
+
     } catch (ResponseProcessingException e) {
       logger.error("Error processing the response: " + e.getMessage());
     } catch (ProcessingException e) {
@@ -238,17 +244,24 @@ public class KeycloakAuthClient extends AuthClient {
   }
 
   /**
-   * Call keycloaks introspect endpoint.
+   * Verify token validity - either internally or via keycloak token introspection.
+   * You can't use token introspection for id tokens with older keycloak versions (probably <4.5.0)
    * @param token an JWT token (Access, ID or Refresh)
+   * @param externalValidation if true, use token introspection, if false, return internal validate
+   *     value
    * @return true if token is active, false otherwise
    */
-  private boolean checkTokenValidity(AbstractJwt token) {
-    Invocation.Builder builder = getTokenIntrospectionBuilder();
-    builder.header("Authorization", getBasicAuthentication());
-    Form form = new Form();
-    form.param("token", token.getSerialized());
-    JSONObject introspectionResult = builder.post(Entity.form(form), JSONObject.class);
-    return (boolean) introspectionResult.getOrDefault("active", false);
+  public boolean checkTokenValidity(AbstractJwt token, boolean externalValidation) {
+    if (!externalValidation) {
+      return token.isValid();
+    } else {
+      Invocation.Builder builder = getTokenIntrospectionBuilder();
+      builder.header("Authorization", getBasicAuthentication());
+      Form form = new Form();
+      form.param("token", token.getSerialized());
+      JSONObject introspectionResult = builder.post(Entity.form(form), JSONObject.class);
+      return (boolean) introspectionResult.getOrDefault("active", false);
+    }
   }
 
   /** Returns the current OAuth2 configuration. */
@@ -284,7 +297,10 @@ public class KeycloakAuthClient extends AuthClient {
   }
 
   private Invocation.Builder getDiscoveryBuilder() {
-    return getUriPrefix()
+    return client
+        .target(baseUrl)
+        .path("realms")
+        .path(config.getRealm())
         .path(".well-known")
         .path("openid-configuration")
         .request(MediaType.APPLICATION_JSON);
