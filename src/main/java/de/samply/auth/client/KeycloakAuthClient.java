@@ -39,6 +39,8 @@ import de.samply.auth.utils.OAuth2ClientConfig;
 import de.samply.common.config.OAuth2Client;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
@@ -219,7 +221,14 @@ public class KeycloakAuthClient extends AuthClient {
       form.param("scope", "openid");
     }
     try {
-      List<String> supportedSigningAlgs = getDiscovery().getSupportedSigningAlgs();
+      List<String> supportedRequestObjectSigningAlgs = getDiscovery().getSupportedSigningAlgs();
+      List<String> supportedIdTokenSigningAlgs = getDiscovery().getSupportedIdTokenSigningAlgs();
+
+      List<String> supportedSigningAlgs = Stream
+          .concat(supportedIdTokenSigningAlgs.stream(), supportedRequestObjectSigningAlgs.stream())
+          .collect(
+              Collectors.toList());
+
       boolean externalValidation = supportedSigningAlgs.contains(JWSAlgorithm.HS256.getName());
       AccessTokenDto tokenDto = builder.post(Entity.form(form), AccessTokenDto.class);
       accessToken = new JwtAccessToken(publicKey, tokenDto.getAccessToken(), externalValidation);
