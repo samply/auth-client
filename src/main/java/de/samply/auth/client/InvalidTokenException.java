@@ -20,17 +20,11 @@
  * the terms of the General Public License, version 2.0, the licensors of this Program grant you
  * additional permission to convey the resulting work.
  */
+
 package de.samply.auth.client;
 
-/**
- * Thrown when the signature in the returned tokens is not valid.
- *
- */
+/** Thrown when the signature in the returned tokens is not valid. */
 public class InvalidTokenException extends Exception {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = 1L;
-
+  private static final long serialVersionUID = -2275490837605752111L;
 }

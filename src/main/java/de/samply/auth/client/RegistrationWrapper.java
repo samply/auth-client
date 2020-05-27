@@ -22,27 +22,27 @@
 
 package de.samply.auth.client;
 
-import de.samply.auth.rest.RegistrationRequestDTO;
+import de.samply.auth.rest.RegistrationRequestDto;
 import org.keycloak.representations.idm.UserRepresentation;
 
 public class RegistrationWrapper {
 
-    private RegistrationRequestDTO regReq;
-    private UserRepresentation usrRep;
+  private RegistrationRequestDto regReq;
+  private UserRepresentation usrRep;
 
-    public RegistrationWrapper(RegistrationRequestDTO regReq) {
-        this.regReq = regReq;
-    }
+  public RegistrationWrapper(RegistrationRequestDto regReq) {
+    this.regReq = regReq;
+  }
 
-    public RegistrationWrapper(UserRepresentation usrRep) {
-        this.usrRep = usrRep;
-    }
+  public RegistrationWrapper(UserRepresentation usrRep) {
+    this.usrRep = usrRep;
+  }
 
-    public RegistrationRequestDTO getRegReq() {
-        return regReq;
-    }
+  public RegistrationRequestDto getRegReq() {
+    return regReq;
+  }
 
-    public UserRepresentation getUsrRep() {
-        return usrRep;
-    }
+  public UserRepresentation getUsrRep() {
+    return usrRep;
+  }
 }

@@ -23,7 +23,7 @@
 package de.samply.auth.client;
 
 public class KeycloakUsertype {
-    public static final String OSSE_REGISTRY = "OSSE_REGISTRY";
-    public static final String NORMAL = "NORMAL";
-    public static final String BRIDGEHEAD = "BRIDGEHEAD";
+  public static final String OSSE_REGISTRY = "OSSE_REGISTRY";
+  public static final String NORMAL = "NORMAL";
+  public static final String BRIDGEHEAD = "BRIDGEHEAD";
 }

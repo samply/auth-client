@@ -22,70 +22,88 @@
 
 package de.samply.auth.client;
 
-import de.samply.auth.rest.RegistrationRequestDTO;
-import de.samply.auth.rest.UserDTO;
-import de.samply.auth.rest.UserListDTO;
+import de.samply.auth.rest.RegistrationRequestDto;
+import de.samply.auth.rest.UserDto;
+import de.samply.auth.rest.UserListDto;
 import de.samply.auth.rest.Usertype;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
-import java.util.*;
-
 public class AuthClientUtils {
 
-    public static UserRepresentation samplyRegistrationToKeycloak(RegistrationRequestDTO samplyUser, String password) {
-        UserRepresentation keycloakUser = new UserRepresentation();
-        keycloakUser.setEmail(samplyUser.getEmail());
-        keycloakUser.setEmailVerified(true);
-        keycloakUser.setUsername(samplyUser.getName());
-        keycloakUser.setEnabled(true);
-        Map<String, List<String>> attributes = new HashMap<>();
-        attributes.put("usertype", Collections.singletonList(samplyUserTypeToKeycloak(samplyUser.getUsertype())));
-        attributes.put("description", Collections.singletonList(samplyUser.getDescription()));
-        keycloakUser.setAttributes(attributes);
+  /**
+   * TODO: add javadoc.
+   */
+  public static UserRepresentation samplyRegistrationToKeycloak(
+      RegistrationRequestDto samplyUser, String password) {
+    UserRepresentation keycloakUser = new UserRepresentation();
+    keycloakUser.setEmail(samplyUser.getEmail());
+    keycloakUser.setEmailVerified(true);
+    keycloakUser.setUsername(samplyUser.getName());
+    keycloakUser.setEnabled(true);
+    Map<String, List<String>> attributes = new HashMap<>();
+    attributes.put(
+        "usertype", Collections.singletonList(samplyUserTypeToKeycloak(samplyUser.getUsertype())));
+    attributes.put("description", Collections.singletonList(samplyUser.getDescription()));
+    keycloakUser.setAttributes(attributes);
 
-        CredentialRepresentation credentials = new CredentialRepresentation();
-        credentials.setTemporary(false);
-        credentials.setType("password");
-        credentials.setValue(password);
-        keycloakUser.setCredentials(Collections.singletonList(credentials));
-        return keycloakUser;
+    CredentialRepresentation credentials = new CredentialRepresentation();
+    credentials.setTemporary(false);
+    credentials.setType("password");
+    credentials.setValue(password);
+    keycloakUser.setCredentials(Collections.singletonList(credentials));
+    return keycloakUser;
+  }
+
+  /**
+   * TODO: add javadoc.
+   */
+  public static UserDto keycloakUserToSamply(UserRepresentation keycloakUser) {
+    UserDto samplyUser = new UserDto();
+    // TODO map missing fields ?
+    //            samplyUser.setContactInformation();
+    samplyUser.setEmail(keycloakUser.getEmail());
+    samplyUser.setEmailVerified(keycloakUser.isEmailVerified());
+    //            samplyUser.setExternalLabel();
+    samplyUser.setId(keycloakUser.getId());
+    //            samplyUser.setLocations();
+    samplyUser.setName(keycloakUser.getFirstName() + " " + keycloakUser.getLastName());
+    return samplyUser;
+  }
+
+  /**
+   * TODO: add javadoc.
+   */
+  public static UserListDto keycloakUsersToSamply(UserRepresentation[] keycloakUsers) {
+    UserListDto userList = new UserListDto();
+    List<UserDto> samplyUsers = new ArrayList<>();
+
+    for (UserRepresentation keycloakUser : keycloakUsers) {
+      samplyUsers.add(keycloakUserToSamply(keycloakUser));
     }
 
-    public static UserDTO keycloakUserToSamply(UserRepresentation keycloakUser) {
-        UserDTO samplyUser = new UserDTO();
-        // TODO map missing fields ?
-//            samplyUser.setContactInformation();
-        samplyUser.setEmail(keycloakUser.getEmail());
-        samplyUser.setEmailVerified(keycloakUser.isEmailVerified());
-//            samplyUser.setExternalLabel();
-        samplyUser.setId(keycloakUser.getId());
-//            samplyUser.setLocations();
-        samplyUser.setName(keycloakUser.getFirstName() + " " + keycloakUser.getLastName());
-        return samplyUser;
-    }
+    userList.setUsers(samplyUsers);
+    return userList;
+  }
 
-    public static UserListDTO keycloakUsersToSamply(UserRepresentation[] keycloakUsers) {
-        UserListDTO userList = new UserListDTO();
-        List<UserDTO> samplyUsers = new ArrayList<>();
-
-        for (UserRepresentation keycloakUser : keycloakUsers) {
-            samplyUsers.add(keycloakUserToSamply(keycloakUser));
-        }
-
-        userList.setUsers(samplyUsers);
-        return userList;
-    }
-
-    public static String samplyUserTypeToKeycloak(Usertype usertype) {
-        switch (usertype){
-            case OSSE_REGISTRY:
-                return KeycloakUsertype.OSSE_REGISTRY;
-            case NORMAL:
-                return KeycloakUsertype.NORMAL;
-            case BRIDGEHEAD:
-                return KeycloakUsertype.BRIDGEHEAD;
-        }
+  /**
+   * TODO: add javadoc.
+   */
+  public static String samplyUserTypeToKeycloak(Usertype usertype) {
+    switch (usertype) {
+      case OSSE_REGISTRY:
+        return KeycloakUsertype.OSSE_REGISTRY;
+      case NORMAL:
+        return KeycloakUsertype.NORMAL;
+      case BRIDGEHEAD:
+        return KeycloakUsertype.BRIDGEHEAD;
+      default:
         return null;
     }
+  }
 }

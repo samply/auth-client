@@ -22,180 +22,291 @@
 
 package de.samply.auth.client;
 
-import de.samply.auth.client.jwt.*;
-import de.samply.auth.rest.*;
+import de.samply.auth.client.jwt.AbstractJwt;
+import de.samply.auth.client.jwt.JwtAccessToken;
+import de.samply.auth.client.jwt.JwtException;
+import de.samply.auth.client.jwt.JwtIdToken;
+import de.samply.auth.client.jwt.JwtRefreshToken;
+import de.samply.auth.client.jwt.KeyLoader;
+import de.samply.auth.rest.AccessTokenDto;
+import de.samply.auth.rest.ClientListDto;
+import de.samply.auth.rest.LocationDto;
+import de.samply.auth.rest.LocationListDto;
+import de.samply.auth.rest.OAuth2Discovery;
+import de.samply.auth.rest.UserListDto;
 import de.samply.auth.utils.OAuth2ClientConfig;
 import de.samply.common.config.OAuth2Client;
-import org.glassfish.jersey.client.ClientResponse;
-import org.keycloak.representations.idm.UserRepresentation;
-
+import java.util.List;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
+import net.minidev.json.JSONObject;
+import org.keycloak.representations.idm.UserRepresentation;
 
 public class KeycloakAuthClient extends AuthClient {
 
-    public KeycloakAuthClient(JWTAccessToken accessToken, JWTIDToken idToken, JWTRefreshToken refreshToken, OAuth2Client config,
-                            Client client, String state) {
-        super(config.getHost(), accessToken, idToken, refreshToken, config, KeyLoader.loadKey(config.getHostPublicKey()),null,
-            null, client, state, null, null, null, null);
+  /**
+   * TODO: add javadoc.
+   */
+  public KeycloakAuthClient(
+      JwtAccessToken accessToken,
+      JwtIdToken idToken,
+      JwtRefreshToken refreshToken,
+      OAuth2Client config,
+      Client client,
+      String state) {
+    super(
+        config.getHost(),
+        accessToken,
+        idToken,
+        refreshToken,
+        config,
+        KeyLoader.loadKey(config.getHostPublicKey()),
+        null,
+        null,
+        client,
+        state,
+        null,
+        null,
+        null,
+        null);
+  }
+
+  /**
+   * TODO: add javadoc.
+   */
+  public KeycloakAuthClient(String code, OAuth2Client config, Client client, String state) {
+    super(
+        config.getHost(),
+        null,
+        null,
+        null,
+        config,
+        KeyLoader.loadKey(config.getHostPublicKey()),
+        null,
+        code,
+        client,
+        state,
+        null,
+        null,
+        null,
+        null);
+  }
+
+  /**
+   * TODO: add javadoc.
+   */
+  public KeycloakAuthClient(OAuth2Client config, Client client, String state) {
+    super(
+        config.getHost(),
+        null,
+        null,
+        null,
+        config,
+        KeyLoader.loadKey(config.getHostPublicKey()),
+        null,
+        null,
+        client,
+        state,
+        null,
+        null,
+        null,
+        null);
+  }
+
+  /**
+   * TODO: add javadoc.
+   */
+  public KeycloakAuthClient(OAuth2Client config, Client client) {
+    super(
+        config.getHost(),
+        null,
+        null,
+        null,
+        config,
+        KeyLoader.loadKey(config.getHostPublicKey()),
+        null,
+        null,
+        client,
+        null,
+        null,
+        null,
+        null,
+        null);
+  }
+
+  /**
+   * Returns a List of currently active clients.
+   */
+  public ClientListDto getClients() {
+    return getClientBuilder().get(ClientListDto.class);
+  }
+
+  /**
+   * Searches for users using the given string.
+   */
+  public UserListDto searchUser(String input) {
+    UserRepresentation[] keycloakUsers =
+        getUserBuilder(input)
+            .header("Authorization", getRestAccessToken().getHeader())
+            .get(UserRepresentation[].class);
+    return AuthClientUtils.keycloakUsersToSamply(keycloakUsers);
+  }
+
+  /**
+   * Returns a list of all locations.
+   */
+  public List<LocationDto> getLocations() {
+    return getLocationsBuilder()
+        .header("Authorization", getAuthorizationHeader())
+        .get(LocationListDto.class)
+        .getLocations();
+  }
+
+  /**
+   * TODO: add javadoc.
+   */
+  public Response register(RegistrationWrapper wrapper) {
+    UserRepresentation user = wrapper.getUsrRep();
+    if (user == null) {
+      return null;
     }
+    return getRegisterBuilder()
+        .header("Authorization", getRestAccessToken().getHeader())
+        .post(Entity.json(user));
+  }
 
-    public KeycloakAuthClient(String code, OAuth2Client config, Client client, String state) {
-        super(config.getHost(), null, null, null, config, KeyLoader.loadKey(config.getHostPublicKey()), null,
-            code, client, state, null, null, null, null);
+  /**
+   * Explicitly requests a new Access token. This is a blocking call. Use this method only if
+   * necessary.
+   */
+  protected JwtAccessToken getNewAccessToken() throws JwtException, InvalidTokenException {
+    logger.debug("Requesting new access token, base URL: " + baseUrl);
+
+    Invocation.Builder builder = getAccessTokenBuilder();
+
+    Form form = new Form();
+    if (refreshToken != null) {
+      form.param("refresh_token", refreshToken.getSerialized());
+    } else if (code
+        != null) { // TODO to save at least some compatibility to samply auth... this is crap :)
+      form.param("grant_type", GrantType.AUTHORIZATION_CODE);
+      form.param("code", code);
+      form.param("redirect_uri", redirectUrl);
+      form.param("client_id", config.getClientId());
+      form.param("client_secret", config.getClientSecret());
+      form.param("state", state);
+    } else if (grantType.equals(GrantType.CLIENT_CREDENTIALS)) {
+      form.param("grant_type", grantType);
+      form.param("client_id", config.getClientId());
+      form.param("client_secret", config.getClientSecret());
+      form.param("scope", "openid");
+    } else if (grantType.equals(GrantType.PASSWORD)) {
+      form.param("grant_type", grantType);
+      form.param("client_id", config.getClientId());
+      form.param("client_secret", config.getClientSecret());
+      form.param("username", username);
+      form.param("password", password);
+      form.param("scope", "openid");
     }
+    try {
+      AccessTokenDto tokenDto = builder.post(Entity.form(form), AccessTokenDto.class);
+      accessToken = new JwtAccessToken(publicKey, tokenDto.getAccessToken(), true);
+      idToken = new JwtIdToken(config.getClientId(), publicKey, tokenDto.getIdToken(), true);
+      refreshToken = new JwtRefreshToken(publicKey, tokenDto.getRefreshToken(), true);
 
-    public KeycloakAuthClient(OAuth2Client config, Client client, String state) {
-        super(config.getHost(), null, null, null, config, KeyLoader.loadKey(config.getHostPublicKey()), null,
-            null, client, state, null, null, null, null);
+      if (!checkTokenValidity(accessToken) || !checkTokenValidity(idToken) || !checkTokenValidity(
+          refreshToken)) {
+        logger.debug("The token we got was not valid. Throw an exception.");
+        throw new InvalidTokenException();
+      }
+    } catch (ResponseProcessingException e) {
+      logger.error("Error processing the response: " + e.getMessage());
+    } catch (ProcessingException e) {
+      logger.error("General processing error: " + e.getMessage());
     }
+    logger.debug("Got new valid access token using a code!");
+    return this.accessToken;
+  }
 
-    public KeycloakAuthClient(OAuth2Client config, Client client) {
-        super(config.getHost(), null, null, null, config, KeyLoader.loadKey(config.getHostPublicKey()), null,
-            null, client, null, null, null, null, null);
-    }
+  /**
+   * Call keycloaks introspect endpoint.
+   * @param token an JWT token (Access, ID or Refresh)
+   * @return true if token is active, false otherwise
+   */
+  private boolean checkTokenValidity(AbstractJwt token) {
+    Invocation.Builder builder = getTokenIntrospectionBuilder();
+    Form form = new Form();
+    form.param("token", token.getSerialized());
+    JSONObject introspectionResult = builder.post(Entity.form(form), JSONObject.class);
+    return (boolean) introspectionResult.getOrDefault("active", false);
+  }
 
-    /**
-     * Returns a List of currently active clients.
-     *
-     * @return
-     */
-    public ClientListDTO getClients() {
-        return getClientBuilder().get(ClientListDTO.class);
-    }
+  /** Returns the current OAuth2 configuration. */
+  public OAuth2Discovery getDiscovery() {
+    return getDiscoveryBuilder().get(OAuth2Discovery.class);
+  }
 
-    /**
-     * Searches for users using the given string.
-     *
-     * @param input
-     * @return
-     * @throws InvalidKeyException
-     * @throws InvalidTokenException
-     */
-    public UserListDTO searchUser(String input) {
-        UserRepresentation[] keycloakUsers = getUserBuilder(input).header("Authorization", getRestAccessToken().getHeader()).get(UserRepresentation[].class);
-        return AuthClientUtils.keycloakUsersToSamply(keycloakUsers);
-    }
+  private WebTarget getUriPrefix() {
+    return client.target(baseUrl).path(OAuth2ClientConfig.getEndpointPrefix(config.getRealm()));
+  }
 
-    /**
-     * Returns a list of all locations.
-     *
-     * @return
-     * @throws InvalidKeyException
-     * @throws InvalidTokenException
-     */
-    public List<LocationDTO> getLocations() {
-        return getLocationsBuilder().header("Authorization", getAuthorizationHeader()).get(LocationListDTO.class).getLocations();
-    }
+  protected Invocation.Builder getAccessTokenBuilder() {
+    return getUriPrefix().path("token").request(MediaType.APPLICATION_JSON);
+  }
 
-    public Response register(RegistrationWrapper wrapper) {
-        UserRepresentation user = wrapper.getUsrRep();
-        if (user == null) {
-            return null;
-        }
-        return getRegisterBuilder().header("Authorization", getRestAccessToken().getHeader()).post(Entity.json(user));
-    }
+  protected Invocation.Builder getTokenIntrospectionBuilder() {
+    return client
+        .register(new BasicAuthenticator(config.getClientId(), config.getClientSecret()))
+        .target(baseUrl)
+        .path(OAuth2ClientConfig.getEndpointPrefix(config.getRealm()))
+        .path("token")
+        .path("introspect")
+        .request(MediaType.APPLICATION_JSON);
+  }
 
-    /**
-     * Explicitly requests a new Access token. This is a blocking call. Use this method only if necessary.
-     *
-     * @return
-     * @throws JWTException
-     * @throws InvalidTokenException
-     * @throws InvalidKeyException
-     */
-    protected JWTAccessToken getNewAccessToken() throws JWTException, InvalidTokenException {
-        logger.debug("Requesting new access token, base URL: " + baseUrl);
+  private Invocation.Builder getRegisterBuilder() {
+    return client
+        .target(baseUrl)
+        .path("admin")
+        .path("realms")
+        .path(config.getRealm())
+        .path("users")
+        .request(MediaType.APPLICATION_JSON);
+  }
 
-        Invocation.Builder builder = getAccessTokenBuilder();
-        AccessTokenDTO tokenDTO;
+  private Invocation.Builder getDiscoveryBuilder() {
+    return getUriPrefix()
+        .path(".well-known")
+        .path("openid-configuration")
+        .request(MediaType.APPLICATION_JSON);
+  }
 
-        Form form = new Form();
-        if (refreshToken != null) {
-            form.param("refresh_token", refreshToken.getSerialized());
-        } else if (code != null) { // TODO to save at least some compatibility to samply auth... this is crap :)
-            form.param("grant_type", GrantType.AUTHORIZATION_CODE);
-            form.param("code", code);
-            form.param("redirect_uri", redirectURL);
-            form.param("client_id", config.getClientId());
-            form.param("client_secret", config.getClientSecret());
-            form.param("state", state);
-        } else if (grantType.equals(GrantType.CLIENT_CREDENTIALS)) {
-            form.param("grant_type", grantType);
-            form.param("client_id", config.getClientId());
-            form.param("client_secret", config.getClientSecret());
-            form.param("scope", "openid");
-        } else if (grantType.equals(GrantType.PASSWORD)){
-            form.param("grant_type", grantType);
-            form.param("client_id", config.getClientId());
-            form.param("client_secret", config.getClientSecret());
-            form.param("username", username);
-            form.param("password", password);
-            form.param("scope", "openid");
-        }
-        tokenDTO = builder.post(Entity.form(form), AccessTokenDTO.class);
+  /** Returns the Builder to search for users. */
+  private Invocation.Builder getUserBuilder(String input) {
+    return client
+        .target(baseUrl)
+        .path("admin")
+        .path("realms")
+        .path(config.getRealm())
+        .path("users")
+        .queryParam("search", input)
+        .request(MediaType.APPLICATION_JSON);
+  }
 
-        accessToken = new JWTAccessToken(publicKey, tokenDTO.getAccessToken());
-        idToken = new JWTIDToken(config.getClientId(), publicKey, tokenDTO.getIdToken());
-        refreshToken = new JWTRefreshToken(publicKey, tokenDTO.getRefreshToken());
+  // TODO keycloak is not done
+  private Invocation.Builder getLocationsBuilder() {
+    return getUriPrefix().path("???").request(MediaType.APPLICATION_JSON);
+  }
 
-        if (!accessToken.isValid() || !idToken.isValid() || !refreshToken.isValid()) {
-            logger.debug("The token we got was not valid. Throw an exception.");
-            throw new InvalidTokenException();
-        }
-
-        logger.debug("Got new valid access token using a code!");
-
-        return this.accessToken;
-    }
-
-    /**
-     * Returns the current OAuth2 configuration.
-     */
-    public OAuth2Discovery getDiscovery() {
-        return getDiscoveryBuilder().get(OAuth2Discovery.class);
-    }
-
-    private WebTarget getUriPrefix() {
-        return client.target(baseUrl).path(OAuth2ClientConfig.getEndpointPrefix(config.getRealm()));
-    }
-
-    protected Invocation.Builder getAccessTokenBuilder() {
-        return getUriPrefix().path("token").request(MediaType.APPLICATION_JSON);
-    }
-
-    private Invocation.Builder getRegisterBuilder() {
-        return client.target(baseUrl).path("admin").path("realms").path(config.getRealm()).path("users").request(MediaType.APPLICATION_JSON);
-    }
-
-    private Invocation.Builder getDiscoveryBuilder() {
-        return getUriPrefix().path(".well-known").path("openid-configuration").request(MediaType.APPLICATION_JSON);
-    }
-
-    /**
-     * Returns the Builder to search for users.
-     */
-    private Invocation.Builder getUserBuilder(String input) {
-        return client.target(baseUrl).path("admin").path("realms").path(config.getRealm()).path("users")
-            .queryParam("search", input).request(MediaType.APPLICATION_JSON);
-    }
-
-    // TODO keycloak is not done
-    private Invocation.Builder getLocationsBuilder() {
-        return getUriPrefix().path("???").request(MediaType.APPLICATION_JSON);
-    }
-
-    /**
-     * Returns the Builder to get all clients.
-     * TODO keycloak is not done
-     */
-    protected Invocation.Builder getClientBuilder() {
-        return getUriPrefix().path("token").request(MediaType.APPLICATION_JSON);
-    }
+  /** Returns the Builder to get all clients. TODO keycloak is not done */
+  protected Invocation.Builder getClientBuilder() {
+    return getUriPrefix().path("token").request(MediaType.APPLICATION_JSON);
+  }
 }

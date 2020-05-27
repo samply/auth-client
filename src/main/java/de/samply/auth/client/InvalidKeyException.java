@@ -23,15 +23,8 @@
 
 package de.samply.auth.client;
 
-/**
- * Thrown when the key is not valid for the requested algorithm.
- *
- */
+/** Thrown when the key is not valid for the requested algorithm. */
 public class InvalidKeyException extends Exception {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = 1L;
-
+  private static final long serialVersionUID = -2097615762434247412L;
 }
