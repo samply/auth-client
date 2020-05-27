@@ -1,0 +1,42 @@
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>auth-client</artifactId>
+    <version>2.0.0</version>
+    <name>The Samply.Auth Client</name>
+    <description>A simple library used for the Samply.Auth identity provider</description>
+
+    <parent>
+        <groupId>de.mig.samply</groupId>
+        <artifactId>parent</artifactId>
+        <version>9.3</version>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>de.mig.samply</groupId>
+            <artifactId>auth-dto</artifactId>
+            <version>2.4.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-jackson</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-authz-client</artifactId>
+            <version>4.0.0.Final</version>
+        </dependency>
+    </dependencies>
+
+</project>
