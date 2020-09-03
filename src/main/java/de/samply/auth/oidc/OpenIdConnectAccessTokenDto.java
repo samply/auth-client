@@ -36,7 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OpenIdConnectAccessTokenDTO implements Serializable {
+public class OpenIdConnectAccessTokenDto implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -51,6 +51,7 @@ public class OpenIdConnectAccessTokenDTO implements Serializable {
   private String idToken;
 
   /**
+   * Todo: Javadoc.
    * @return the accessToken
    */
   @XmlElement(name = "access_token")
@@ -59,6 +60,7 @@ public class OpenIdConnectAccessTokenDTO implements Serializable {
   }
 
   /**
+   * Todo: Javadoc.
    * @param accessToken the accessToken to set
    */
   public void setAccessToken(String accessToken) {
@@ -66,6 +68,7 @@ public class OpenIdConnectAccessTokenDTO implements Serializable {
   }
 
   /**
+   * Todo: Javadoc.
    * @return the type
    */
   @XmlElement(name = "token_type")
@@ -74,6 +77,7 @@ public class OpenIdConnectAccessTokenDTO implements Serializable {
   }
 
   /**
+   * Todo: Javadoc.
    * @param type the type to set
    */
   public void setType(String type) {
@@ -81,6 +85,7 @@ public class OpenIdConnectAccessTokenDTO implements Serializable {
   }
 
   /**
+   * Todo: Javadoc.
    * @return the expires_in
    */
   @XmlElement(name = "expires_in")
@@ -89,10 +94,11 @@ public class OpenIdConnectAccessTokenDTO implements Serializable {
   }
 
   /**
-   * @param expires_in the expires_in to set
+   * Todo: Javadoc.
+   * @param expiresIn the expiresIn to set
    */
-  public void setExpiresIn(int expires_in) {
-    this.expiresIn = expires_in;
+  public void setExpiresIn(int expiresIn) {
+    this.expiresIn = expiresIn;
   }
 
   @XmlElement(name = "refresh_token")

@@ -43,12 +43,13 @@ import org.slf4j.LoggerFactory;
 /**
  * A simple OpenId Connect client.
  */
-// TODO: Introduce superclass 'AbstractOpenIdConnectClient' and use it for OpenIdConnectClient and AdfsClient
+// TODO: Introduce superclass 'AbstractOpenIdConnectClient' and use it for OpenIdConnectClient and
+//       AdfsClient
 //       Resolve the Bitbucket project for ADFS client
 public class OpenIdConnectClient {
 
   /**
-   * The Authorization header
+   * The Authorization header.
    */
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private static Logger logger = LoggerFactory.getLogger(OpenIdConnectClient.class);
@@ -129,6 +130,9 @@ public class OpenIdConnectClient {
     return null;
   }
 
+  /**
+   * Todo Javadoc.
+   */
   public String getBaseUrl() {
     String resultUrl;
     if (!url.endsWith("/") && !urlExt.startsWith("/")) {
@@ -149,7 +153,7 @@ public class OpenIdConnectClient {
   /**
    * Gets a new identity token from the OpenId Connect identity provider.
    */
-  public OpenIdConnectAccessTokenDTO getAccessTokenDTO(String code, String localRedirectUrl)
+  public OpenIdConnectAccessTokenDto getAccessTokenDto(String code, String localRedirectUrl)
       throws JwtException {
     WebTarget target = client.target(getBaseUrl() + "token");
 
@@ -160,13 +164,13 @@ public class OpenIdConnectClient {
     values.add("redirect_uri", localRedirectUrl);
     values.add("code", code);
 
-    OpenIdConnectAccessTokenDTO openIdConnectAccessTokenDTO = null;
+    OpenIdConnectAccessTokenDto openIdConnectAccessTokenDto = null;
     try {
-      openIdConnectAccessTokenDTO = target.request(MediaType.APPLICATION_JSON_TYPE)
+      openIdConnectAccessTokenDto = target.request(MediaType.APPLICATION_JSON_TYPE)
           .post(Entity.entity(values, MediaType.APPLICATION_FORM_URLENCODED_TYPE),
-              OpenIdConnectAccessTokenDTO.class);
+              OpenIdConnectAccessTokenDto.class);
 
-      return openIdConnectAccessTokenDTO;
+      return openIdConnectAccessTokenDto;
     } catch (Exception e) {
       e.printStackTrace();
       throw e;
@@ -185,6 +189,7 @@ public class OpenIdConnectClient {
   }
 
   /**
+   * Todo: Javadoc.
    * @return the url
    */
   public String getUrl() {
@@ -192,6 +197,7 @@ public class OpenIdConnectClient {
   }
 
   /**
+   * Todo: Javadoc.
    * @param url the url to set
    */
   public void setUrl(String url) {
@@ -199,6 +205,7 @@ public class OpenIdConnectClient {
   }
 
   /**
+   * Todo: Javadoc.
    * @return the urlExt
    */
   public String getUrlExt() {
@@ -206,6 +213,7 @@ public class OpenIdConnectClient {
   }
 
   /**
+   * Todo: Javadoc.
    * @param urlExt the urlExt to set
    */
   public void setUrlExt(String urlExt) {
@@ -213,6 +221,7 @@ public class OpenIdConnectClient {
   }
 
   /**
+   * Todo: Javadoc.
    * @return the publicKey
    */
   public String getPublicKey() {
@@ -220,6 +229,7 @@ public class OpenIdConnectClient {
   }
 
   /**
+   * Todo: Javadoc.
    * @param publicKey the publicKey to set
    */
   public void setPublicKey(String publicKey) {
@@ -227,6 +237,7 @@ public class OpenIdConnectClient {
   }
 
   /**
+   * Todo: Javadoc.
    * @return the clientId
    */
   public String getClientId() {
@@ -234,6 +245,7 @@ public class OpenIdConnectClient {
   }
 
   /**
+   * Todo: Javadoc.
    * @param clientId the clientId to set
    */
   public void setClientId(String clientId) {
