@@ -23,10 +23,23 @@
  * permission to convey the resulting work.
  */
 
-package de.samply.auth.client;
+package de.samply.auth.oidc;
 
-public class GrantType {
-  public static final String AUTHORIZATION_CODE = "authorization_code";
-  public static final String PASSWORD = "password";
-  public static final String CLIENT_CREDENTIALS = "client_credentials";
+import de.samply.auth.client.jwt.AbstractJwt;
+import de.samply.auth.client.jwt.JwtException;
+import java.security.PublicKey;
+
+public class JwtOpenIdConnectIdToken extends AbstractJwt {
+
+  private static final long serialVersionUID = 1L;
+
+  public JwtOpenIdConnectIdToken(PublicKey publicKey, String serialized) throws JwtException {
+    super(publicKey, serialized);
+  }
+
+  @Override
+  protected String getTokenType() {
+    return null;
+  }
+
 }
