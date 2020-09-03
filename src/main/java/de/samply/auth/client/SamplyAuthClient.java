@@ -62,7 +62,9 @@ import org.apache.commons.codec.binary.Base64;
 
 public class SamplyAuthClient extends AuthClient {
 
-  /** The OAuth2 API URL PATH. */
+  /**
+   * The OAuth2 API URL PATH.
+   */
   private static final String OAUTH2_PATH = "oauth2";
 
   /**
@@ -180,7 +182,7 @@ public class SamplyAuthClient extends AuthClient {
     /** If this is a client with a code, id and secret */
     logger.debug("Requesting new access token, base URL: " + baseUrl);
 
-    if(code != null || refreshToken != null) {
+    if (code != null || refreshToken != null) {
       Invocation.Builder builder = getAccessTokenRequestBuilder();
 
       AccessTokenRequestDto dto = new AccessTokenRequestDto();
@@ -207,7 +209,7 @@ public class SamplyAuthClient extends AuthClient {
       logger.debug("Got new valid access token using a code!");
 
       return this.accessToken;
-    } else if(privateKey != null) {
+    } else if (privateKey != null) {
       logger.debug("Requesting a code to sign");
 
       try {
@@ -225,14 +227,14 @@ public class SamplyAuthClient extends AuthClient {
 
         logger.debug("Signing code:" + post.getCode());
 
-        AccessTokenRequestDto accessDTO = new AccessTokenRequestDto();
-        accessDTO.setCode(post.getCode());
-        accessDTO.setSignature(Base64.encodeBase64String(signature.sign()));
+        AccessTokenRequestDto accessDto = new AccessTokenRequestDto();
+        accessDto.setCode(post.getCode());
+        accessDto.setSignature(Base64.encodeBase64String(signature.sign()));
 
         builder = getAccessTokenRequestBuilder();
-        AccessTokenDto tokenDTO = builder.post(Entity.json(accessDTO), AccessTokenDto.class);
+        AccessTokenDto tokenDto = builder.post(Entity.json(accessDto), AccessTokenDto.class);
 
-        accessToken = new JwtAccessToken(this.publicKey, tokenDTO.getAccessToken());
+        accessToken = new JwtAccessToken(this.publicKey, tokenDto.getAccessToken());
 
         /*
          * Those tokens are not available in this workflow. Ignore them.
@@ -240,7 +242,7 @@ public class SamplyAuthClient extends AuthClient {
         idToken = null;
         refreshToken = null;
 
-        if(!accessToken.isValid()) {
+        if (!accessToken.isValid()) {
           logger.debug("The token we got was not valid. Throw an exception.");
           throw new InvalidTokenException();
         }
@@ -259,7 +261,9 @@ public class SamplyAuthClient extends AuthClient {
     throw new UnsupportedOperationException();
   }
 
-  /** Returns the current OAuth2 configuration. */
+  /**
+   * Returns the current OAuth2 configuration.
+   */
   public OAuth2Discovery getDiscovery() {
     return getDiscoveryRequestBuilder().get(OAuth2Discovery.class);
   }
@@ -275,6 +279,7 @@ public class SamplyAuthClient extends AuthClient {
 
   /**
    * Todo: javadoc.
+   *
    * @return a builder for building requests to get an access token.
    */
   private Invocation.Builder getAccessTokenRequestBuilder() {
@@ -283,14 +288,17 @@ public class SamplyAuthClient extends AuthClient {
 
   /**
    * Returns the Builder to get a sign request.
+   *
    * @return a builder for building requests to get a sign request
    */
   private Builder getSignRequestBuilder() {
-    return client.target(baseUrl).path(OAUTH2_PATH).path("sign_request").request(MediaType.APPLICATION_JSON);
+    return client.target(baseUrl).path(OAUTH2_PATH).path("sign_request")
+        .request(MediaType.APPLICATION_JSON);
   }
 
   /**
    * Todo: javadoc.
+   *
    * @return a builder for building requests to register an application
    */
   private Invocation.Builder getRegisterRequestBuilder() {
@@ -299,6 +307,7 @@ public class SamplyAuthClient extends AuthClient {
 
   /**
    * Todo: javadoc.
+   *
    * @return a builder for building requests to get the current OAuth2 configuration.
    */
   private Invocation.Builder getDiscoveryRequestBuilder() {
@@ -310,6 +319,7 @@ public class SamplyAuthClient extends AuthClient {
 
   /**
    * Returns the Builder to search for users.
+   *
    * @param input query as a query parameter
    * @return a builder for building requests to search for users.
    */
@@ -323,6 +333,7 @@ public class SamplyAuthClient extends AuthClient {
 
   /**
    * Todo: javadoc.
+   *
    * @return a builder for building requests to get all locations.
    */
   private Invocation.Builder getLocationsRequestBuilder() {
@@ -331,6 +342,7 @@ public class SamplyAuthClient extends AuthClient {
 
   /**
    * Returns the Builder to get all clients.
+   *
    * @return a builder for building requests to get all clients.
    */
   protected Invocation.Builder getClientBuilder() {
@@ -338,45 +350,51 @@ public class SamplyAuthClient extends AuthClient {
   }
 
 
-
-  /** Returns the Builder to get all clients. */
+  /**
+   * Returns the Builder to get all clients.
+   */
   private Invocation.Builder getClientsRequestBuilder() {
     return getUriPrefix().path("clients").request(MediaType.APPLICATION_JSON);
   }
 
   /**
    * Returns the Builder to get all roles.
+   *
    * @return a builder for building requests to get all roles.
    */
   private Invocation.Builder getRoleRequestBuilder() {
-    return client.target(baseUrl).path(OAUTH2_PATH).path("roles").request(MediaType.APPLICATION_JSON);
-  }
-
-  /**
-   * Returns a List of currently active roles.
-   */
-  public RoleListDto getRoles() {
-    return getRoleRequestBuilder().header("Authorization", getAuthorizationHeader()).get(RoleListDto.class);
-  }
-
-  /**
-   * Returns all details for a specific role.
-   * @param identifier The identifier of the role.
-   * @return all details for a specific role
-   */
-  public RoleDto getRole(String identifier){
-    return getRoleRequestBuilder(identifier).header("Authorization", getAuthorizationHeader())
-        .get(RoleDto.class);
+    return client.target(baseUrl).path(OAUTH2_PATH).path("roles")
+        .request(MediaType.APPLICATION_JSON);
   }
 
   /**
    * Returns the Builder to get a specific role.
+   *
    * @param identifier The identifier of the role.
    * @return a builder for building requests for a specific role
    */
   private Builder getRoleRequestBuilder(String identifier) {
     return client.target(baseUrl).path(OAUTH2_PATH).path("roles").path(identifier)
         .request(MediaType.APPLICATION_JSON);
+  }
+
+  /**
+   * Returns a List of currently active roles.
+   */
+  public RoleListDto getRoles() {
+    return getRoleRequestBuilder().header("Authorization", getAuthorizationHeader())
+        .get(RoleListDto.class);
+  }
+
+  /**
+   * Returns all details for a specific role.
+   *
+   * @param identifier The identifier of the role.
+   * @return all details for a specific role
+   */
+  public RoleDto getRole(String identifier) {
+    return getRoleRequestBuilder(identifier).header("Authorization", getAuthorizationHeader())
+        .get(RoleDto.class);
   }
 
 }
