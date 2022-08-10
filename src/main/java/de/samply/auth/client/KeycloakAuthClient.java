@@ -256,11 +256,12 @@ public class KeycloakAuthClient extends AuthClient {
   }
 
   /**
-   * Verify token validity - either internally or via keycloak token introspection.
-   * You can't use token introspection for id tokens with older keycloak versions (probably <4.5.0)
-   * @param token an JWT token (Access, ID or Refresh)
+   * Verify token validity - either internally or via keycloak token introspection. You can't use
+   * token introspection for id tokens with older keycloak versions (probably lower 4.5.0)
+   *
+   * @param token              an JWT token (Access, ID or Refresh)
    * @param externalValidation if true, use token introspection, if false, return internal validate
-   *     value
+   *                           value
    * @return true if token is active, false otherwise
    */
   public boolean checkTokenValidity(AbstractJwt token, boolean externalValidation) {
@@ -276,7 +277,9 @@ public class KeycloakAuthClient extends AuthClient {
     }
   }
 
-  /** Returns the current OAuth2 configuration. */
+  /**
+   * Returns the current OAuth2 configuration.
+   */
   public OAuth2Discovery getDiscovery() {
     return getDiscoveryBuilder().get(OAuth2Discovery.class);
   }
@@ -318,7 +321,9 @@ public class KeycloakAuthClient extends AuthClient {
         .request(MediaType.APPLICATION_JSON);
   }
 
-  /** Returns the Builder to search for users. */
+  /**
+   * Returns the Builder to search for users.
+   */
   private Invocation.Builder getUserBuilder(String input) {
     return client
         .target(baseUrl)
@@ -335,7 +340,9 @@ public class KeycloakAuthClient extends AuthClient {
     return getUriPrefix().path("???").request(MediaType.APPLICATION_JSON);
   }
 
-  /** Returns the Builder to get all clients. TODO keycloak is not done */
+  /**
+   * Returns the Builder to get all clients. TODO keycloak is not done
+   */
   protected Invocation.Builder getClientBuilder() {
     return getUriPrefix().path("token").request(MediaType.APPLICATION_JSON);
   }
